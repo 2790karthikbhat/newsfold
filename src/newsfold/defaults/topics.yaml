@@ -1,0 +1,24 @@
+# Declarative topic list. `digest topics sync` reconciles this into the DB.
+# mode: persistent | temporary   (temporary topics don't auto-expire — archive them manually)
+# languages: Google News locales to query, one request per language — non-English
+#            results are translated into settings.yaml's `target_language`.
+#
+# These are starter examples. Run `digest init` to copy this file to your config
+# directory, then replace them with what you actually want to follow.
+
+topics:
+  - keyword: "renewable energy"
+    mode: persistent
+    languages: [en, de]
+
+  - keyword: "space exploration"
+    mode: persistent
+    languages: [en, fr]
+
+  - keyword: "open source software"
+    mode: persistent
+    languages: [en]
+
+  - keyword: "F1"
+    mode: temporary
+    languages: [en]

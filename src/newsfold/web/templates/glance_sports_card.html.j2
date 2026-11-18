@@ -1,0 +1,39 @@
+{# Fragment for Glance's `extension` widget — "Last / Live / Next" card,
+   modeled on glanceapp/community-widgets' football-fixtures widget, but built
+   from our own structured Event data: no manual UTC->local hour-offset hacks
+   or hardcoded team-name overrides needed, since start_time is a real
+   datetime (data-dynamic-relative-time handles relative display client-side)
+   and team names come from our own filtered/matched Event list. #}
+<div>
+  <div style="margin-bottom: 12px;">
+    <div class="color-subdue" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;">Last match</div>
+    {% if last_match %}
+    <div class="color-primary size-h4">{{ last_match.result or last_match.title }}</div>
+    {% set ts = epoch(last_match.start_time) %}
+    <div class="color-subdue"{% if ts %} data-dynamic-relative-time="{{ ts }}"{% endif %}>{{ last_match.start_time.strftime("%d-%m-%Y %H:%M") if last_match.start_time else "" }}</div>
+    {% else %}
+    <div class="color-subdue">No finished matches found</div>
+    {% endif %}
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <div class="color-subdue" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;">Live match</div>
+    {% if live_match %}
+    <div class="color-highlight size-h4">{{ live_match.title }}</div>
+    {% if live_match.subtitle %}<div class="color-subdue">{{ live_match.subtitle }}</div>{% endif %}
+    {% else %}
+    <div class="color-subdue">No matches are played right now</div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="color-subdue" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;">Next match</div>
+    {% if next_match %}
+    <div class="color-primary size-h4">{{ next_match.title }}</div>
+    {% set ts = epoch(next_match.start_time) %}
+    <div class="color-subdue"{% if ts %} data-dynamic-relative-time="{{ ts }}"{% endif %}>{{ next_match.start_time.strftime("%d-%m-%Y %H:%M") if next_match.start_time else "" }}</div>
+    {% else %}
+    <div class="color-subdue">No upcoming matches found</div>
+    {% endif %}
+  </div>
+</div>

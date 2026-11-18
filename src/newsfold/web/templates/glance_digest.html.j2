@@ -1,0 +1,25 @@
+{# Fragment for Glance's `extension` widget — intentionally does NOT extend
+   base.html.j2. Uses Glance's own CSS utility classes so it renders natively
+   inside the dashboard, not newsfold's Paper & Ink tokens:
+   - collapsible-container + data-collapse-after: long lists fold, same as the
+     built-in rss widget's `collapse-after` config option.
+   - visited-indicator + color-primary-if-not-visited: already-clicked stories
+     fade, unvisited ones stay accented — Glance's native answer to "read".
+   - data-dynamic-relative-time: relative "3 days ago" text, client-side. #}
+{% if articles %}
+<ul class="list list-gap-10 collapsible-container" data-collapse-after="5">
+  {% for a in articles %}
+  <li>
+    <a class="size-h4 block text-truncate visited-indicator color-primary-if-not-visited" href="{{ base_url }}/digest/article/{{ a.id }}">{{ a.title }}</a>
+    <ul class="list-horizontal-text">
+      <li>{{ a.source_name }}</li>
+      {% set ts = epoch(a.published_at) %}
+      <li{% if ts %} data-dynamic-relative-time="{{ ts }}"{% endif %}>{{ a.published_display }}</li>
+      {% if a.source_count > 1 %}<li>{{ a.source_count }} sources</li>{% endif %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="color-paragraph">No unread stories right now.</p>
+{% endif %}

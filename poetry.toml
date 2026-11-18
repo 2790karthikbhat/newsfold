@@ -1,0 +1,5 @@
+# Local Poetry config (committed). Keeps the venv inside this directory as ./.venv
+# instead of Poetry's global cache.
+[virtualenvs]
+in-project = true
+create = true

@@ -1,0 +1,171 @@
+# Global pipeline settings.
+#
+# Any value below can be overridden from the shell / .env without editing this
+# tracked file: write `${VAR}` or `${VAR:-default}` and it's substituted at load
+# time (VAR unset + no default -> ""). See .env.example for the vars already wired
+# up. Everything else stays a plain YAML value edited in place, same as before.
+
+# Relative sqlite paths resolve against the data home: the repo root in a source
+# checkout, $NEWSFOLD_HOME if set, else ~/.local/share/newsfold (see README).
+db_url: "sqlite:///data/newsfold.db"   # override: NEWSFOLD_DB_URL
+
+# Reading language for translated titles/summaries/bodies in the digest.
+target_language: en
+
+ingestion:
+  lookback_days: 2                 # ignore feed entries older than this
+  default_region: US               # gl / ceid region when a language has no explicit mapping
+  region_by_language:              # which Google News locale to query per language
+    en: US
+    de: DE
+    fr: FR
+    es: ES
+    vi: VN
+  decode_request_interval_sec: 1.0 # Google News decoder rate limit — do not lower
+  # How many decodes run at once (thread pool). 1 = old fully-serial behaviour.
+  # Each worker still waits decode_request_interval_sec before its own request, so
+  # this doesn't relax the per-request pacing above — it raises how many paced
+  # requests are in flight together, which does raise Google's view of your request
+  # rate. Start low (2-4), watch `digest decode`'s broken-count for a spike (a sign
+  # of 429s), and drop back to 1 if you see one. --concurrency on `digest decode`
+  # overrides this for one run.
+  decode_concurrency: ${NEWSFOLD_DECODE_CONCURRENCY:-3}
+  http_timeout_sec: 20
+
+clustering:
+  same_story_title_jaccard: 0.4    # token-overlap threshold to merge into one cluster
+  publish_window_days: 1           # +/- days for "same story"
+  recency_half_life_hours: 24
+
+ranking:
+  candidate_clusters_per_topic: 18 # top-N by rank_score kept after scoring
+  tier1_bonus: 2.0                 # score added when a cluster contains a tier-1 domain
+  keep_per_topic: 8                # final cap returned by the LLM ranking pass
+
+processing:
+  max_articles_per_run: 60         # hard budget ceiling across all topics
+  extract_timeout_sec: 20
+  # How many full-text fetches run at once (thread pool). 1 = fully serial. Unlike
+  # decode there's no single shared endpoint to 429 us — survivor URLs scatter
+  # across many publisher domains — but several survivors can still share one
+  # outlet, so keep this bounded rather than unbounded. --concurrency on
+  # `digest extract` overrides this for one run.
+  extract_concurrency: ${NEWSFOLD_EXTRACT_CONCURRENCY:-5}
+
+# Article lifecycle housekeeping — applied by `digest cleanup`, never silently by
+# `digest run`. `saved` articles are never touched by either policy, no matter how
+# old. Age is measured from published_at, falling back to fetched_at when unknown.
+# Set either to 0 (or blank) to disable it.
+retention:
+  # Unread, non-saved articles older than this auto-archive (read_state -> archived,
+  # reversible, row untouched) — keeps the active/unread list from filling with
+  # stories you never got to. Only ever touches status IN (clustered, processed).
+  auto_archive_after_days: ${NEWSFOLD_AUTO_ARCHIVE_DAYS:-14}
+  # Non-saved rows older than this get HARD-deleted — but only status IN (discarded,
+  # broken): pipeline noise that was never shown to you. Never touches unread/read/
+  # archived articles regardless of age; raise the scope deliberately, not by
+  # lowering this number.
+  auto_delete_after_days: ${NEWSFOLD_AUTO_DELETE_DAYS:-30}
+
+# web UI (`digest serve`).
+web:
+  # The URL a *browser* uses to reach this server — used only to build absolute
+  # links in the /glance/digest fragment (Glance's own backend may fetch that
+  # fragment over a different network path than your browser uses, e.g. Docker's
+  # host.docker.internal, so the fragment can't just reuse whatever Host header
+  # the fetch arrived with). Leave blank to fall back to that Host header, which
+  # is only correct when Glance and newsfold are reached the same way (no
+  # Docker/reverse-proxy in between). Example if Glance runs in Docker:
+  # NEWSFOLD_PUBLIC_BASE_URL=http://127.0.0.1:8765 (whatever your browser
+  # actually types to reach `digest serve`).
+  public_base_url: ${NEWSFOLD_PUBLIC_BASE_URL:-}
+
+# Sports fixtures/results for the Glance dashboard widget (/glance/sports).
+# Refreshed only by an explicit `digest sports fetch` (e.g. via cron) — never
+# inside `digest run`, same "deliberate, not automatic" convention as retention
+# above. The web route only ever reads the cache that command writes; it never
+# calls these APIs itself, so a slow/rate-limited provider can't make the Glance
+# widget hang.
+sports:
+  http_timeout_sec: 20
+  cache_ttl_minutes: 60          # how long a cached fetch is considered fresh
+  # Football and cricket events outside this window are dropped after fetching
+  # (football-data.org returns a whole season; cricket is fetched one day at a
+  # time across exactly this window — see below). F1 is exempt: it shows
+  # the full remaining calendar, not a windowed one.
+  results_days: 7                # how many days back a finished match still shows
+  upcoming_days: 14               # how many days ahead a scheduled match shows
+  football:
+    # football-data.org free tier: https://www.football-data.org/client/register
+    api_key_env: NEWSFOLD_SPORTS_FOOTBALL_API_KEY
+    competitions: [PL]           # competition codes to fetch (free tier covers PL, CL, ELC, ...)
+    teams: []                    # e.g. [Arsenal, Liverpool]; empty = whole competition
+  cricket:
+    # Big Balls Sports Data (bigballsdata.com), free tier 1,000 req/day. No
+    # team-search param exists on their /v1/cricket/matches endpoint, but it
+    # does support ?date=YYYY-MM-DD for one full, complete day of matches — we
+    # fetch one request per day across results_days..upcoming_days above (a
+    # 21-day window costs ~21 requests) and filter client-side by team name.
+    # Deliberately NOT CricAPI:
+    # its free-tier match list isn't sorted or team-filterable and routinely
+    # missed matches a followed team was actually playing.
+    api_key_env: NEWSFOLD_SPORTS_CRICKET_API_KEY
+    teams: [India, Australia, England]
+  f1:
+    # Jolpica-F1 (api.jolpi.ca) — free, no key; Ergast-API-compatible successor.
+    # One championship, nothing to filter: full remaining calendar + last result.
+    enabled: true
+
+# LLM backend for the classify/translate/summarize and newsworthiness-rank
+# stages. `provider` picks the active block below; the other blocks are ignored.
+# `<task>_model` (rank_model) overrides `model` for one stage, falling back to
+# `model` when blank/unset.
+#
+# Everything here is env-overridable (see .env.example), so switching provider,
+# model, or endpoint — e.g. to try a different LM Studio model — never needs an
+# edit to this tracked file: `export NEWSFOLD_LLM_MODEL=llama-3.2-3b` and re-run.
+# NEWSFOLD_LLM_MODEL / _RANK_MODEL / _BASE_URL apply to whichever provider is
+# active; NEWSFOLD_LLM_PROVIDER switches providers outright.
+llm:
+  provider: ${NEWSFOLD_LLM_PROVIDER:-anthropic}  # anthropic | openai | azure | lmstudio | ollama
+  request_timeout_sec: 120
+  max_tokens: 2048
+
+  anthropic:
+    model: ${NEWSFOLD_LLM_MODEL:-claude-haiku-4-5-20251001}   # classify + translate + summarize
+    rank_model: ${NEWSFOLD_LLM_RANK_MODEL:-claude-sonnet-5}   # newsworthiness ranking
+    api_key_env: ANTHROPIC_API_KEY
+
+  openai:
+    model: ${NEWSFOLD_LLM_MODEL:-gpt-4o-mini}
+    rank_model: ${NEWSFOLD_LLM_RANK_MODEL:-}
+    api_key_env: OPENAI_API_KEY
+    # any OpenAI-compatible endpoint works here, e.g. Groq's
+    # https://api.groq.com/openai/v1 (set api_key_env to match)
+    base_url: ${NEWSFOLD_LLM_BASE_URL:-https://api.openai.com/v1}
+
+  azure:
+    # Azure OpenAI. `endpoint` is the resource URL, https://<resource>.openai.azure.com
+    # (an .../openai/v1 URL also works). `deployment` is your deployment name — it is
+    # sent as the model. api_version: a dated GA version uses
+    #   {endpoint}/openai/deployments/{deployment}/chat/completions?api-version=...
+    # while `v1` uses the versionless {endpoint}/openai/v1/chat/completions.
+    endpoint: ${AZURE_OPENAI_ENDPOINT:-}
+    deployment: ${NEWSFOLD_LLM_MODEL:-}
+    rank_deployment: ${NEWSFOLD_LLM_RANK_MODEL:-}
+    api_version: ${AZURE_OPENAI_API_VERSION:-2024-10-21}
+    api_key_env: AZURE_OPENAI_API_KEY
+
+  lmstudio:
+    model: ${NEWSFOLD_LLM_MODEL:-qwen2.5-7b-instruct}        # whatever is loaded in LM Studio
+    rank_model: ${NEWSFOLD_LLM_RANK_MODEL:-}
+    base_url: ${NEWSFOLD_LLM_BASE_URL:-http://localhost:1234/v1}
+    # json_format defaults to "text" for LM Studio (MLX engines reject json_object).
+    # Set NEWSFOLD_LLM_JSON_FORMAT=json_object if your loaded model + engine supports it.
+    json_format: ${NEWSFOLD_LLM_JSON_FORMAT:-text}
+
+  ollama:
+    model: ${NEWSFOLD_LLM_MODEL:-llama3.1}
+    rank_model: ${NEWSFOLD_LLM_RANK_MODEL:-}
+    base_url: ${NEWSFOLD_LLM_BASE_URL:-http://localhost:11434/v1}
+    json_format: ${NEWSFOLD_LLM_JSON_FORMAT:-json_object}

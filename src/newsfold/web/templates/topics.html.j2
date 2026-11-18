@@ -1,0 +1,54 @@
+{% extends "base.html.j2" %}
+{% set active = "topics" %}
+{% block title %}Topics · Newsfold{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Topics</h1>
+<p class="page-sub">What the pipeline follows — persistent categories and short-lived interests.</p>
+
+{% if topics %}
+<div class="stack">
+  {% for t in topics %}
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+    <div>
+      <strong>{{ t.keyword }}</strong>
+      <div class="meta" style="margin-top:.2rem">{{ t.mode }} · {{ t.languages }}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.7rem">
+      <span class="badge {{ t.status }}">{{ t.status }}</span>
+      {% if t.status == "active" %}
+      <form class="inline" method="post" action="/topics/{{ t.id }}/archive"
+            onsubmit="return confirm('Archive {{ t.keyword }}?')">
+        <button class="ghost" type="submit">archive</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">No topics yet — run <code>digest topics sync</code> or add one below.</p>
+{% endif %}
+
+<details class="panel">
+  <summary>Add a topic</summary>
+  <div class="card">
+    <form method="post" action="/topics">
+      <label for="keyword">Keyword</label>
+      <input id="keyword" name="keyword" required placeholder="e.g. cricket">
+
+      <label for="mode">Mode</label>
+      <select id="mode" name="mode">
+        <option value="temporary" selected>temporary</option>
+        <option value="persistent">persistent</option>
+      </select>
+
+      <label for="languages">Languages (comma-separated)</label>
+      <input id="languages" name="languages" value="en" placeholder="en, vi">
+
+      <button type="submit">Add topic</button>
+    </form>
+  </div>
+</details>
+
+{% endblock %}

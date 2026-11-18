@@ -1,0 +1,33 @@
+{% extends "base.html.j2" %}
+{% set active = "saved" %}
+{% block title %}Saved · Newsfold{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Saved</h1>
+<p class="page-sub">Your read-later pile — never touched by <code>digest cleanup</code>.</p>
+
+{% if articles %}
+<div class="stack">
+  {% for a in articles %}
+  <div class="card ribbon">
+    <a href="/digest/article/{{ a.id }}" style="text-decoration:none;color:inherit">
+      <strong style="font-family:var(--serif);font-size:1.05rem;line-height:1.35">{{ a.title }}</strong>
+    </a>
+    <p class="meta" style="margin:.4rem 0 0">
+      {{ a.topic }} · {{ a.source_name }}
+      {% if a.read_state != "unread" %}· <span class="badge">{{ a.read_state }}</span>{% endif %}
+    </p>
+    <div class="actions" style="margin-bottom:0">
+      <form method="post" action="/digest/article/{{ a.id }}/unsave">
+        <input type="hidden" name="next" value="/digest/saved">
+        <button class="chip active" type="submit">★ unsave</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">Nothing saved yet — use ☆ save on any article to build a read-later pile.</p>
+{% endif %}
+
+{% endblock %}

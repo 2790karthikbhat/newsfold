@@ -1,0 +1,27 @@
+{% extends "base.html.j2" %}
+{% set active = "digest" %}
+{% block title %}Digest · Newsfold{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Digest</h1>
+<p class="page-sub">{{ topics|length }} topic{{ "s" if topics|length != 1 }} with fresh stories right now.</p>
+
+{% if topics %}
+<div class="grid cols-2">
+  {% for t in topics %}
+  <a class="card ribbon" href="/digest/topic/{{ t.keyword | urlencode }}">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem">
+      <strong style="font-family:var(--serif);font-size:1.05rem">{{ t.keyword }}</strong>
+      <span class="badge count">{{ t.count }}</span>
+    </div>
+    {% if t.top %}
+    <p class="meta" style="margin:.5rem 0 0;line-height:1.4">{{ t.top.title }}</p>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">No live stories yet — run <code>digest run</code> (fetch → decode → cluster …) first.</p>
+{% endif %}
+
+{% endblock %}

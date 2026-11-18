@@ -1,0 +1,10 @@
+[Unit]
+Description=newsfold sports cache refresh (football/cricket/F1 for the Glance widget)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# EDIT to wherever you cloned newsfold on this server.
+WorkingDirectory=/opt/newsfold
+ExecStart=/usr/bin/docker compose exec -T newsfold digest sports fetch

@@ -1,0 +1,55 @@
+{% extends "base.html.j2" %}
+{% set active = "sources" %}
+{% block title %}Sources · Newsfold{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Sources</h1>
+<p class="page-sub">User-added feeds, on top of Google News.</p>
+
+{% if sources %}
+<div class="stack">
+  {% for s in sources %}
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+    <div>
+      <strong>{{ s.name }}</strong>
+      <div class="meta" style="margin-top:.2rem">
+        {{ s.scope }}
+        {% if s.resolved_feed_url %} · <a href="{{ s.resolved_feed_url }}" rel="noopener">feed ↗</a>{% endif %}
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.7rem">
+      <span class="badge {{ s.status }}">{{ s.status }}</span>
+      <form class="inline" method="post" action="/sources/{{ s.id }}/remove"
+            onsubmit="return confirm('Remove {{ s.name }}?')">
+        <button class="ghost" type="submit">remove</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">No sources yet — add one below.</p>
+{% endif %}
+
+<details class="panel">
+  <summary>Add a source</summary>
+  <div class="card">
+    <form method="post" action="/sources">
+      <label for="url">Website URL</label>
+      <input id="url" name="url" type="url" required placeholder="https://example.com">
+
+      <label for="name">Name (optional)</label>
+      <input id="name" name="name" placeholder="overrides the discovered feed title">
+
+      <label for="topic">Scope to topic (optional)</label>
+      <select id="topic" name="topic">
+        <option value="">all topics</option>
+        {% for t in topics %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+
+      <button type="submit">Add source</button>
+    </form>
+  </div>
+</details>
+
+{% endblock %}

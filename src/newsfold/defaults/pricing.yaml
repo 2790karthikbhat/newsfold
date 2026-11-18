@@ -1,0 +1,33 @@
+# LLM price table for the per-run cost summary — USD per 1,000,000 tokens.
+# Edit freely: `digest init` copies this to your config dir.
+#
+# Keys are provider -> model id exactly as configured in settings.yaml [llm].
+# A dated snapshot (`<model>-20251001`, `<model>-2024-07-18`) also matches its
+# base key. A model missing here is reported as "cost unknown" (tokens are still
+# counted). lmstudio / ollama are always $0. Prompt-cache discounts, batch and
+# long-context tiers are not modelled — this is the base rate only.
+#
+# Seed values were copied from the official pages on 2026-11-15 — re-check them:
+#   anthropic: https://platform.claude.com/docs/en/about-claude/pricing
+#   openai:    https://developers.openai.com/api/docs/pricing  (Standard tier)
+
+anthropic:
+  claude-haiku-4-5: {input: 1.00, output: 5.00}
+  claude-sonnet-5: {input: 2.00, output: 10.00}
+
+openai:
+  gpt-4o-mini: {input: 0.15, output: 0.60}
+  gpt-4o: {input: 2.50, output: 10.00}
+  gpt-4.1: {input: 2.00, output: 8.00}
+  gpt-4.1-mini: {input: 0.40, output: 1.60}
+  gpt-5: {input: 1.25, output: 10.00}
+  gpt-5-mini: {input: 0.25, output: 2.00}
+  gpt-5-nano: {input: 0.05, output: 0.40}
+  gpt-5.1: {input: 1.25, output: 10.00}
+  # Other OpenAI-compatible hosts (Groq, Together, ...) use their own prices and
+  # model ids — not seeded; add yours here under `openai:` if you point base_url
+  # at one.
+
+# Azure deployment names are yours, and prices vary by region/deployment type —
+# nothing is seeded. Add `<deployment-name>: {input: ..., output: ...}`.
+azure: {}

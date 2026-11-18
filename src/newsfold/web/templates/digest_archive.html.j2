@@ -1,0 +1,24 @@
+{% extends "base.html.j2" %}
+{% set active = "digest" %}
+{% block title %}Archive · Newsfold{% endblock %}
+{% block content %}
+
+<p class="meta" style="margin-bottom:.4rem"><a href="/digest">← Digest</a></p>
+<h1 class="page-title">Past digests</h1>
+<p class="page-sub">Previously rendered <code>digest run</code> / <code>digest render</code> files.</p>
+
+{% if files %}
+<table class="plain">
+  <tr><th>Date</th><th>Format</th></tr>
+  {% for f in files %}
+  <tr>
+    <td><a href="/digest/archive/{{ f.run_date }}?format={{ f.format }}">{{ f.run_date }}</a></td>
+    <td>{{ f.format }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="empty">No rendered digests in <code>out/</code> yet — run <code>digest run</code>.</p>
+{% endif %}
+
+{% endblock %}

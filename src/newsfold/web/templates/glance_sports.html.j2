@@ -1,0 +1,23 @@
+{# Fragment for Glance's `extension` widget — intentionally does NOT extend
+   base.html.j2. Uses Glance's own CSS utility classes. Read-only: shows whatever
+   `digest sports fetch` last cached, never calls a sports API itself.
+   collapsible-container/data-collapse-after and data-dynamic-relative-time are
+   the same Glance-native affordances used in glance_digest.html.j2. #}
+{% if not snapshot or not snapshot.events %}
+<p class="color-paragraph">No {{ sport_label }} data cached yet — run <code>digest sports fetch</code>.</p>
+{% else %}
+<ul class="list list-gap-10 collapsible-container" data-collapse-after="6">
+  {% for e in snapshot.events %}
+  <li>
+    <span class="size-h4 color-highlight block text-truncate">{{ e.title }}</span>
+    <ul class="list-horizontal-text">
+      {% if e.subtitle %}<li>{{ e.subtitle }}</li>{% endif %}
+      {% set ts = epoch(e.start_time) %}
+      {% if ts %}<li data-dynamic-relative-time="{{ ts }}">{{ e.start_time.strftime("%b %d, %H:%M") }}</li>{% endif %}
+      {% if e.result %}<li class="color-positive">{{ e.result }}</li>{% endif %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+{% if snapshot.stale %}<p class="color-paragraph">(cached data may be stale)</p>{% endif %}
+{% endif %}

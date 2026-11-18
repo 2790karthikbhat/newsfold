@@ -1,0 +1,89 @@
+{% extends "base.html.j2" %}
+{% set active = "digest" %}
+{% block title %}{{ article.title }} · Newsfold{% endblock %}
+{% block content %}
+
+<p class="meta" style="margin-bottom:.4rem">
+  <a href="/digest">Digest</a> ·
+  <a href="/digest/topic/{{ topic.keyword | urlencode }}">{{ topic.keyword }}</a>
+</p>
+
+<div style="max-width:66ch">
+  <h1 class="page-title" style="font-size:1.55rem;line-height:1.3">{{ article.title }}</h1>
+  {% if article.title_is_translated %}
+  <p class="meta" style="margin-top:-.6rem">Original: {{ article.title_original }}</p>
+  {% endif %}
+
+  <p class="page-sub">
+    {{ article.source_name }} · {{ article.published_display }}
+    {% if article.language_original %}· {{ article.language_original }}{% endif %}
+    {% if article.saved %}· <span class="badge count">★ saved</span>{% endif %}
+    {% if article.read_state != "unread" %}· <span class="badge">{{ article.read_state }}</span>{% endif %}
+    {% if article.headline_only %}· <span class="badge">headline only</span>{% endif %}
+    {% if article.source_count > 1 %}· <span class="badge">{{ article.source_count }} sources</span>{% endif %}
+    · <a href="{{ article.source_url }}" rel="noopener">read original ↗</a>
+  </p>
+
+  <div class="actions">
+    {% if article.read_state == "unread" %}
+    <form method="post" action="/digest/article/{{ article.id }}/read">
+      <input type="hidden" name="next" value="/digest/article/{{ article.id }}">
+      <button class="chip" type="submit">mark read</button>
+    </form>
+    {% else %}
+    <form method="post" action="/digest/article/{{ article.id }}/unread">
+      <input type="hidden" name="next" value="/digest/article/{{ article.id }}">
+      <button class="chip active" type="submit">mark unread</button>
+    </form>
+    {% endif %}
+
+    {% if article.read_state == "archived" %}
+    <form method="post" action="/digest/article/{{ article.id }}/unarchive">
+      <input type="hidden" name="next" value="/digest/article/{{ article.id }}">
+      <button class="chip active" type="submit">unarchive</button>
+    </form>
+    {% else %}
+    <form method="post" action="/digest/article/{{ article.id }}/archive">
+      <input type="hidden" name="next" value="/digest/article/{{ article.id }}">
+      <button class="chip" type="submit">archive</button>
+    </form>
+    {% endif %}
+
+    {% if article.saved %}
+    <form method="post" action="/digest/article/{{ article.id }}/unsave">
+      <input type="hidden" name="next" value="/digest/article/{{ article.id }}">
+      <button class="chip active" type="submit">★ unsave</button>
+    </form>
+    {% else %}
+    <form method="post" action="/digest/article/{{ article.id }}/save">
+      <input type="hidden" name="next" value="/digest/article/{{ article.id }}">
+      <button class="chip" type="submit">☆ save for later</button>
+    </form>
+    {% endif %}
+
+    <form method="post" action="/digest/article/{{ article.id }}/delete"
+          onsubmit="return confirm('Permanently delete this article? This can\'t be undone.')">
+      <input type="hidden" name="next" value="/digest/topic/{{ topic.keyword | urlencode }}">
+      <button class="ghost" type="submit">delete</button>
+    </form>
+  </div>
+
+  {% if article.llm_reason %}<p class="meta" style="font-style:italic">{{ article.llm_reason }}</p>{% endif %}
+
+  {% if article.summary %}
+  <p class="card ribbon" style="font-family:var(--serif);font-size:1.05rem;line-height:1.55">{{ article.summary }}</p>
+  {% elif article.excerpt %}
+  <p class="card ribbon" style="font-family:var(--serif);font-size:1.05rem;line-height:1.55;color:var(--muted)">{{ article.excerpt }}</p>
+  {% endif %}
+
+  {% if article.body %}
+  <div style="margin-top:1.6rem">
+    {% if article.body_is_translated %}
+    <p class="meta">Shown translated — <a href="{{ article.source_url }}" rel="noopener">read the original ↗</a></p>
+    {% endif %}
+    <div style="font-family:var(--serif);font-size:1.02rem;line-height:1.55;white-space:pre-wrap">{{ article.body }}</div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

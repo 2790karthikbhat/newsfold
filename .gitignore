@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Project data — regenerated every run
+/data/*
+!/data/.gitkeep
+/out/*
+!/out/.gitkeep
+
+# Local config overrides — `digest init` copies the packaged defaults
+# (src/newsfold/defaults/) here; your topics/keys stay out of git.
+/config/
+
+# Secrets
+.env
+
+# OS / editor
+.DS_Store
+
+# Build artefacts
+/dist/
+/build/

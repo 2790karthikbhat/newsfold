@@ -1,0 +1,11 @@
+[Unit]
+Description=newsfold digest pipeline (fetch/decode/cluster/rank/enrich/render + cleanup)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# EDIT to wherever you cloned newsfold on this server.
+WorkingDirectory=/opt/newsfold
+ExecStart=/usr/bin/docker compose exec -T newsfold digest run
+ExecStart=/usr/bin/docker compose exec -T newsfold digest cleanup

@@ -1,0 +1,16 @@
+# EXAMPLE ONLY. The DB `sources` table is the source of truth at runtime
+# (managed via `digest sources add <url>`). This file documents the shape and
+# can be used to seed the DB with `digest sources sync`.
+#
+# input_url:  what you paste — a homepage OR a feed URL (discovery resolves it)
+# topic:      optional; omit or null = feed feeds EVERY topic
+# name:       optional; publisher name for tier weighting (defaults to the feed title)
+#
+# ⚠️  Prefer a narrow *category* feed scoped to a `topic`. An unscoped general feed
+#     (e.g. a site's homepage RSS) dumps its whole front page into every topic and
+#     leans entirely on the later classify step to filter it back out.
+
+sources:
+  - input_url: "https://www.formula1.com/en/latest/all.xml"
+    name: "Formula 1"
+    topic: "F1"

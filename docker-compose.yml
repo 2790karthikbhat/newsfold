@@ -1,0 +1,30 @@
+# Server deployment. See docs/deploy-server.md for the full setup (network
+# creation, Glance's compose file, systemd timers for the periodic stages).
+#
+# `newsfold` is on the shared `dashboard` external network so Glance's
+# compose project can reach it by service name (http://newsfold:8765) —
+# no host.docker.internal / port-publishing workaround needed when both run
+# on the same server.
+services:
+  newsfold:
+    build: .
+    container_name: newsfold
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./out:/app/out
+      # Your topics.yaml / settings.yaml / ... (any missing file falls back to the
+      # packaged default). `cp src/newsfold/defaults/*.yaml config/` to start.
+      - ./config:/app/config:ro
+    networks:
+      - dashboard
+    # Uncomment to also reach the web UI directly from the host/LAN, not just
+    # from Glance's container — e.g. http://<server>:8765
+    # ports:
+    #   - "8765:8765"
+
+networks:
+  dashboard:
+    external: true

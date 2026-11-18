@@ -1,0 +1,42 @@
+{% extends "base.html.j2" %}
+{% set active = "digest" %}
+{% block title %}{{ topic.keyword }} · Newsfold{% endblock %}
+{% block content %}
+
+<p class="meta" style="margin-bottom:.4rem"><a href="/digest">← Digest</a></p>
+<h1 class="page-title">{{ topic.keyword }}</h1>
+<p class="page-sub">{{ topic.articles|length }} stor{{ "y" if topic.articles|length == 1 else "ies" }}, ranked.</p>
+
+<div class="stack">
+  {% for a in topic.articles %}
+  <div class="card ribbon">
+    <a href="/digest/article/{{ a.id }}" style="text-decoration:none;color:inherit">
+      <strong style="font-family:var(--serif);font-size:1.08rem;line-height:1.35">{{ a.title }}</strong>
+    </a>
+    <p class="meta" style="margin:.4rem 0 0">
+      {{ a.source_name }} · {{ a.published_display }}
+      {% if a.headline_only %}· <span class="badge">headline only</span>{% endif %}
+      {% if a.source_count > 1 %}· <span class="badge">{{ a.source_count }} sources</span>{% endif %}
+    </p>
+    {% if a.summary %}<p style="margin:.5rem 0 0;font-size:.92rem">{{ a.summary }}</p>
+    {% elif a.excerpt %}<p style="margin:.5rem 0 0;font-size:.92rem;color:var(--muted)">{{ a.excerpt }}</p>{% endif %}
+
+    <div class="actions" style="margin-bottom:0">
+      <form method="post" action="/digest/article/{{ a.id }}/save">
+        <input type="hidden" name="next" value="/digest/topic/{{ topic.keyword | urlencode }}">
+        <button class="chip" type="submit">☆ save</button>
+      </form>
+      <form method="post" action="/digest/article/{{ a.id }}/read">
+        <input type="hidden" name="next" value="/digest/topic/{{ topic.keyword | urlencode }}">
+        <button class="chip" type="submit">mark read</button>
+      </form>
+      <form method="post" action="/digest/article/{{ a.id }}/archive">
+        <input type="hidden" name="next" value="/digest/topic/{{ topic.keyword | urlencode }}">
+        <button class="chip" type="submit">archive</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

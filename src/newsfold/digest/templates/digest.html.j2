@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="{{ d.target_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>News Digest — {{ d.run_date }}</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --fg: #1a1a1a; --muted: #666; --line: #e0e0e0; --accent: #0b5fff; --card: #fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --fg: #e8e8e8; --muted: #9a9a9a; --line: #333; --accent: #6ea8ff; --card: #161616; }
+      body { background: #0e0e0e; }
+    }
+    * { box-sizing: border-box; }
+    body { max-width: 46rem; margin: 0 auto; padding: 2rem 1rem 4rem;
+           font: 16px/1.65 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+           color: var(--fg); }
+    header { margin-bottom: 2rem; }
+    h1 { font-size: 1.6rem; margin: 0; }
+    .sub { color: var(--muted); font-size: .9rem; margin-top: .3rem; }
+    nav { margin-top: 1rem; font-size: .9rem; }
+    nav a { color: var(--accent); text-decoration: none; margin-right: 1rem; }
+    h2 { font-size: 1.2rem; margin: 2.75rem 0 0; padding-bottom: .35rem;
+         border-bottom: 2px solid var(--line); }
+    article { padding: 1.25rem 0; border-bottom: 1px solid var(--line); }
+    article h3 { font-size: 1.05rem; margin: 0 0 .35rem; }
+    .orig { color: var(--muted); font-size: .85rem; font-weight: normal; }
+    .meta { color: var(--muted); font-size: .82rem; margin: 0 0 .6rem; }
+    .meta a { color: var(--accent); }
+    .badge { display: inline-block; font-size: .68rem; text-transform: uppercase;
+             letter-spacing: .03em; border: 1px solid var(--line); border-radius: .5rem;
+             padding: .05rem .4rem; color: var(--muted); margin-left: .4rem; }
+    .summary { margin: .3rem 0; }
+    .excerpt { margin: .3rem 0; padding-left: .8rem; border-left: 3px solid var(--line);
+               color: var(--muted); }
+    .reason { font-size: .85rem; color: var(--muted); font-style: italic; }
+    details { margin-top: .5rem; }
+    details > summary { cursor: pointer; color: var(--accent); font-size: .88rem; }
+    details .body { white-space: pre-wrap; margin-top: .6rem; font-size: .95rem; }
+    footer { margin-top: 3rem; color: var(--muted); font-size: .8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>News Digest</h1>
+    <div class="sub">{{ d.run_date }} · {{ d.total_articles }} stories across {{ d.topics|length }} topics · generated {{ d.generated_at }}</div>
+    <nav>
+      {% for topic in d.topics %}<a href="#t{{ loop.index }}">{{ topic.keyword }} ({{ topic.articles|length }})</a>{% endfor %}
+    </nav>
+  </header>
+
+  {% for topic in d.topics %}
+  <section>
+    <h2 id="t{{ loop.index }}">{{ topic.keyword }}</h2>
+    {% for a in topic.articles %}
+    <article>
+      <h3>
+        {{ a.title }}
+        {% if a.saved %}<span class="badge">★ saved</span>{% endif %}
+        {% if a.read_state != "unread" %}<span class="badge">{{ a.read_state }}</span>{% endif %}
+        {% if a.headline_only %}<span class="badge">headline only</span>{% endif %}
+        {% if a.source_count > 1 %}<span class="badge">{{ a.source_count }} sources</span>{% endif %}
+      </h3>
+      {% if a.title_is_translated %}<div class="orig">{{ a.title_original }}</div>{% endif %}
+      <p class="meta">
+        {{ a.source_name }} · {{ a.published_display }}
+        {% if a.language_original %} · {{ a.language_original }}{% endif %}
+        · <a href="{{ a.source_url }}" rel="noopener">original ↗</a>
+      </p>
+      {% if a.summary %}<p class="summary">{{ a.summary }}</p>
+      {% elif a.excerpt %}<p class="excerpt">{{ a.excerpt }}</p>{% endif %}
+      {% if a.llm_reason %}<p class="reason">{{ a.llm_reason }}</p>{% endif %}
+      {% if a.body %}
+      <details>
+        <summary>{{ "Full translated article" if a.body_is_translated else "Full article text" }}</summary>
+        <div class="body">{{ a.body }}</div>
+      </details>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+
+  <footer>Newsfold{% if d.usage_line %} · {{ d.usage_line }}{% endif %}</footer>
+</body>
+</html>

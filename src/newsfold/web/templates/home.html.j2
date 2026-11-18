@@ -1,0 +1,41 @@
+{% extends "base.html.j2" %}
+{% set active = "home" %}
+{% block title %}Home · Newsfold{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Home</h1>
+<p class="ledger">
+  <strong>{{ status.articles_by_read_state.get("unread", 0) }}</strong> unread ·
+  <strong>{{ status.articles_saved }}</strong> saved ·
+  <strong>{{ top_stories|length }}</strong> topics live
+  {% if status.latest_run %} · last run {{ status.latest_run.get("started_at", "—") }}{% endif %}
+</p>
+
+{% if top_stories %}
+<p class="eyebrow">Top stories</p>
+<div class="rail" style="margin-bottom:2rem">
+  {% for s in top_stories %}
+  <a class="card ribbon" href="/digest/article/{{ s.article.id }}">
+    <div class="meta" style="text-transform:uppercase;letter-spacing:.05em;font-size:.7rem;margin-bottom:.4rem">{{ s.topic }}</div>
+    <strong style="font-family:var(--serif);font-size:1rem;line-height:1.4">{{ s.article.title }}</strong>
+    <p class="meta" style="margin:.5rem 0 0">{{ s.article.source_name }} · {{ s.article.published_display }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<p class="eyebrow">Go to</p>
+<div class="grid cols-2">
+  <a class="card" href="/digest"><strong>Digest</strong>
+    <p class="meta" style="margin:.3rem 0 0">Browse today's stories by topic.</p></a>
+  <a class="card" href="/topics"><strong>Topics</strong>
+    <p class="meta" style="margin:.3rem 0 0">Add, review, or archive what you follow.</p></a>
+  <a class="card" href="/sources"><strong>Sources</strong>
+    <p class="meta" style="margin:.3rem 0 0">Add a feed or review what's registered.</p></a>
+  <a class="card" href="/digest/saved"><strong>Saved</strong>
+    <p class="meta" style="margin:.3rem 0 0">Your read-later pile.</p></a>
+  <a class="card" href="/digest/archive"><strong>Archive</strong>
+    <p class="meta" style="margin:.3rem 0 0">Look back at previously rendered files.</p></a>
+</div>
+
+{% endblock %}

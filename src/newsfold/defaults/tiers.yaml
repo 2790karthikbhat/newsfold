@@ -1,0 +1,17 @@
+# Minimal tier-1 domain allowlist. Presence of a tier-1 source in
+# a cluster adds a scoring bonus. Grow this ONLY as real-run noise patterns show
+# which outlets are reliable — do not pre-populate a large curated list.
+#
+# `default` applies to every topic; a topic key adds to (not replaces) default.
+
+default:
+  - reuters.com
+  - apnews.com
+  - bbc.com
+  - bbc.co.uk
+
+by_topic:
+  "F1":
+    - formula1.com
+    - autosport.com
+    - the-race.com
