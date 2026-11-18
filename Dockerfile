@@ -3,7 +3,7 @@
 # via `docker compose exec newsfold digest run` (see docs/deploy-server.md).
 # Not a hosted/multi-user service — see CLAUDE.md's "Is/Is not".
 
-FROM python:3.13-slim AS builder
+FROM python:3.15-slim AS builder
 
 RUN pip install --no-cache-dir poetry==2.1.4
 ENV POETRY_NO_INTERACTION=1 \
@@ -19,7 +19,7 @@ COPY alembic.ini README.md LICENSE ./
 RUN poetry install --only main
 
 
-FROM python:3.13-slim AS runtime
+FROM python:3.15-slim AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/2790karthikbhat/newsfold" \
       org.opencontainers.image.description="Multi-source, multi-language news -> one translated, ranked digest" \
